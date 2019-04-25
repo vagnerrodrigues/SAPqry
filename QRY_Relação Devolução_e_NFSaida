@@ -1,0 +1,16 @@
+select
+t0.CardCode  as 'DEV_CodigoCliente',
+t0.CardName as 'DEV_NomeCliente',
+t0.DocNum as 'DEV_NumDevolucao',
+t0.DocDate as 'DEV_DocDAte',
+t0.DocTotal - t0.VatSum as 'DEV_TOTAL',
+t2.CardCode as 'SAIDA_CodCliente',
+t2.CardName as 'SAIDA_NomeCliente',
+t1.Number as 'SAIDA_Nota Fiscal saida',
+t2.DocDate as 'SAIDA_DataVenda'
+
+ from orin t0 
+	INNER JOIN RIN21 T1 ON (t0.DocNum = t1.DocEntry)
+	INNER JOIN OINV T2 ON (T2.Serial = t1.Number)
+ 
+ where t0.CardCode = 'CLI004239'
