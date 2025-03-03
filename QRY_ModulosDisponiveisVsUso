@@ -1,0 +1,54 @@
+WITH ModulosDisponiveis AS (
+    SELECT 'Financeiro' AS Modulo FROM DUMMY UNION ALL
+    SELECT 'Vendas' FROM DUMMY UNION ALL
+    SELECT 'Compras' FROM DUMMY UNION ALL
+    SELECT 'Estoque' FROM DUMMY UNION ALL
+    SELECT 'Produção' FROM DUMMY UNION ALL
+    SELECT 'Serviço' FROM DUMMY UNION ALL
+    SELECT 'Bancos' FROM DUMMY UNION ALL
+    SELECT 'RH' FROM DUMMY
+),
+ModuleUsage AS (
+    SELECT 'Financeiro' AS Modulo, COUNT(*) AS Qtde_Registros FROM OJDT UNION ALL
+    SELECT 'Vendas', COUNT(*) FROM OINV UNION ALL
+    SELECT 'Vendas', COUNT(*) FROM ORDR UNION ALL
+    SELECT 'Compras', COUNT(*) FROM OPCH UNION ALL
+    SELECT 'Compras', COUNT(*) FROM ORPC UNION ALL
+    SELECT 'Compras', COUNT(*) FROM OPOR UNION ALL
+    SELECT 'Estoque', COUNT(*) FROM OIGE UNION ALL
+    SELECT 'Estoque', COUNT(*) FROM OIGN UNION ALL
+    SELECT 'Produção', COUNT(*) FROM OWOR UNION ALL
+    SELECT 'Serviço', COUNT(*) FROM OSCL UNION ALL
+    SELECT 'Bancos', COUNT(*) FROM OVPM UNION ALL
+    SELECT 'Bancos', COUNT(*) FROM ORCT UNION ALL
+    SELECT 'RH', COUNT(*) FROM OHEM
+),
+ModuleSummary AS (
+    SELECT 
+        M.Modulo,
+        COALESCE(SUM(U.Qtde_Registros), 0) AS Total_Registros
+    FROM ModulosDisponiveis M
+    LEFT JOIN ModuleUsage U ON M.Modulo = U.Modulo
+    GROUP BY M.Modulo
+),
+Totalizadores AS (
+    SELECT 
+        SUM(Total_Registros) AS Total_Registros,
+        COUNT(CASE WHEN Total_Registros > 0 THEN 1 END) AS Modulos_Utilizados,
+        COUNT(Modulo) AS Total_Modulos
+    FROM ModuleSummary
+)
+SELECT 
+    M.Modulo,
+    M.Total_Registros,
+    ROUND(M.Total_Registros * 100.0 / NULLIF((SELECT SUM(Total_Registros) FROM ModuleSummary), 0), 2) AS Percentual_Uso
+FROM ModuleSummary M
+
+UNION ALL
+
+SELECT 
+    'TOTAL SAP UTILIZAÇÃO' AS Modulo,
+    T.Total_Registros,
+    ROUND(T.Modulos_Utilizados * 100.0 / NULLIF(T.Total_Modulos, 0), 2) AS Percentual_Modulos_Utilizados
+FROM Totalizadores T
+ORDER BY Percentual_Uso DESC;
