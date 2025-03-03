@@ -1,0 +1,23 @@
+WITH ModuleUsage AS (
+    SELECT 'Financeiro' AS Modulo, COUNT(*) AS Qtde_Registros FROM OJDT UNION ALL -- Lançamentos Contábeis
+    SELECT 'Vendas', COUNT(*) FROM OINV UNION ALL -- Notas Fiscais de Saída
+    SELECT 'Vendas', COUNT(*) FROM ORDR UNION ALL -- Pedidos de Venda
+    SELECT 'Compras', COUNT(*) FROM OPCH UNION ALL -- Notas Fiscais de Entrada
+    SELECT 'Compras', COUNT(*) FROM ORPC UNION ALL -- Notas de Crédito de Compra
+    SELECT 'Compras', COUNT(*) FROM OPOR UNION ALL -- Pedidos de Compra
+    SELECT 'Estoque', COUNT(*) FROM OITM UNION ALL -- Itens de Estoque
+    SELECT 'Estoque', COUNT(*) FROM OIGE UNION ALL -- Saídas de Estoque
+    SELECT 'Estoque', COUNT(*) FROM OIGN UNION ALL -- Entradas de Estoque
+    SELECT 'Produção', COUNT(*) FROM OWOR UNION ALL -- Ordens de Produção
+    SELECT 'Serviço', COUNT(*) FROM OSCL UNION ALL -- Chamados de Suporte
+    SELECT 'Bancos', COUNT(*) FROM OVPM UNION ALL -- Pagamentos efetuados
+    SELECT 'Bancos', COUNT(*) FROM ORCT UNION ALL -- Recebimentos
+    SELECT 'RH', COUNT(*) FROM OHEM -- Funcionários
+)
+SELECT 
+    Modulo,
+    SUM(Qtde_Registros) AS Total_Registros,
+    ROUND(SUM(Qtde_Registros) * 100.0 / NULLIF((SELECT SUM(Qtde_Registros) FROM ModuleUsage), 0), 2) AS Percentual_Uso
+FROM ModuleUsage
+GROUP BY Modulo
+ORDER BY Percentual_Uso DESC;
