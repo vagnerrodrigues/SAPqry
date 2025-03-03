@@ -1,0 +1,34 @@
+WITH ModuleUsage AS (
+    SELECT 'Financeiro' AS Modulo, T0."UserSign" AS Usuario, COUNT(*) AS Qtde_Registros FROM OJDT T0 GROUP BY T0."UserSign" UNION ALL -- Lançamentos Contábeis
+    SELECT 'Vendas', T0."UserSign", COUNT(*) FROM OINV T0 GROUP BY T0."UserSign" UNION ALL -- Notas Fiscais de Saída
+    SELECT 'Vendas', T0."UserSign", COUNT(*) FROM ORDR T0 GROUP BY T0."UserSign" UNION ALL -- Pedidos de Venda
+    SELECT 'Compras', T0."UserSign", COUNT(*) FROM OPCH T0 GROUP BY T0."UserSign" UNION ALL -- Notas Fiscais de Entrada
+    SELECT 'Compras', T0."UserSign", COUNT(*) FROM ORPC T0 GROUP BY T0."UserSign" UNION ALL -- Notas de Crédito de Compra
+    SELECT 'Compras', T0."UserSign", COUNT(*) FROM OPOR T0 GROUP BY T0."UserSign" UNION ALL -- Pedidos de Compra
+    SELECT 'Estoque', T0."UserSign", COUNT(*) FROM OIGE T0 GROUP BY T0."UserSign" UNION ALL -- Saídas de Estoque
+    SELECT 'Estoque', T0."UserSign", COUNT(*) FROM OIGN T0 GROUP BY T0."UserSign" UNION ALL -- Entradas de Estoque
+    SELECT 'Produção', T0."UserSign", COUNT(*) FROM OWOR T0 GROUP BY T0."UserSign" UNION ALL -- Ordens de Produção
+    SELECT 'Bancos', T0."UserSign", COUNT(*) FROM OVPM T0 GROUP BY T0."UserSign" UNION ALL -- Pagamentos efetuados
+    SELECT 'Bancos', T0."UserSign", COUNT(*) FROM ORCT T0 GROUP BY T0."UserSign" -- Recebimentos
+),
+ModuleSummary AS (
+    SELECT 
+        COALESCE(U."USER_CODE", 'Desconhecido') AS Usuario,
+        COALESCE(U."U_NAME", 'Não Identificado') AS Nome_Usuario,
+        M.Modulo,
+        SUM(M.Qtde_Registros) AS Total_Registros,
+        ROUND(SUM(M.Qtde_Registros) * 100.0 / NULLIF((SELECT SUM(Qtde_Registros) FROM ModuleUsage), 0), 2) AS Percentual_Uso
+    FROM ModuleUsage M
+    LEFT JOIN OUSR U ON M.Usuario = U."USERID" -- Alterado para garantir compatibilidade
+    GROUP BY U."USER_CODE", U."U_NAME", M.Modulo
+)
+SELECT Usuario, Nome_Usuario, Modulo, Total_Registros, Percentual_Uso FROM ModuleSummary
+UNION ALL
+SELECT 
+    'TOTAL GERAL' AS Usuario, 
+    '' AS Nome_Usuario, 
+    '' AS Modulo, 
+    SUM(Total_Registros), 
+    100.00 
+FROM ModuleSummary
+ORDER BY Usuario, Percentual_Uso DESC;
